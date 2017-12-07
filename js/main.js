@@ -1,97 +1,161 @@
-(function (window, $) {
+const $ = (...args) => {
+    const results = Array.from(document.querySelectorAll(args));
+    return results.length == 1 ? results[0] : results;
+};
 
-    var data = {},
-        filter,
-        entries = {};
+class MemeViewer {
 
-    var sort = function (sortBy) {
-        container = document.querySelector('#container');
-        entries = container.querySelectorAll(".entry");
+    constructor () {
 
-        entries.sort(function(a,b){
-            var contentA = parseInt( $(a).data(sortBy));
-            var contentB = parseInt( $(b).data(sortBy));
-            return (contentA < contentB) ? -1 : 1;
+        this.allow_nsfw = $("#allow_nsfw");
+        this.allow_sticky = $("#allow_sticky");
+
+        this.sortBy = "score";
+        console.log("loaded");
+        const filter = $("#filter");
+        filter.addEventListener("submit", e => {
+            const formData = new FormData(filter);
+            this.getJSON(formData.get("subreddit"), formData.get("category"), formData.get("limit"));
+            // if left out you get some search params into the url and can reload more easily
+            //e.preventDefault();
         });
 
-        entries.forEach(function () {
-            container.append(this);
-        });
-    };
-
-    var buildList = function (entries) {
-        var container = document.querySelector('#container');
-        var oldEntries = container.querySelectorAll('.entry');
-
-        oldEntries.forEach(function(entry) {
-            container.removeChild(entry);
+        const sort = $("#sort");
+        sort.addEventListener("click", e =>  {
+            if (e.target.value == undefined) return;
+            this.sortBy = sort.querySelector("input[name='sort']:checked").value;
+            this.sort();
         });
 
-        entries.forEach(function (t) {
-            if(t.data.thumbnail == '' || t.data.thumbnail == 'self' ) return;
-            if(t.data.over_18) return;
-            if(t.data.stickied) return;
+        this.getJSON("memes", "hot", "15");
+    }
 
-            var entry = document.createElement('a');
-            entry.classList.add('entry');
-            entry.href = t.data.url;
-            entry.target = "_blank";
-            entry.setAttribute('data-score', t.data.score);
-            entry.setAttribute('data-ups', t.data.ups);
-            entry.setAttribute('data-created', t.data.created);
+    async getJSON (sub, cat, limit) {
+        const res = await fetch(`https://www.reddit.com/r/${sub}/${cat}.json?${this.toQueryString({ g: "GLOBAL", limit })}`);
+        const data = await res.json();
+        this.buildList(data.data.children);
+    }
 
-            var figure = document.createElement('figure');
-            figure.href = t.data.url;
+    buildList (entries) {
+        const container = $("#container");
+        
+        //const oldEntries = container.querySelectorAll(".entry");
+        container.innerHTML = "";
+
+        entries.forEach(entry => {
+            if (entry.data.thumbnail === "" || entry.data.thumbnail == "self") return;
+            if (!this.allow_nsfw.checked && entry.data.over_18) return;
+            if (!this.allow_sticky.checked && entry.data.stickied) return;
+
+            const entryEl = document.createElement('a');
+            entryEl.classList.add('entry');
+            entryEl.href = entry.data.url;
+            entryEl.target = "_blank";
+            entryEl.setAttribute('data-score', entry.data.score);
+            entryEl.setAttribute('data-ups', entry.data.ups);
+            entryEl.setAttribute('data-downs', entry.data.downs);
+            entryEl.setAttribute('data-created', entry.data.created);
+
+            const figure = document.createElement('figure');
+            figure.href = entry.data.url;
             figure.target = "_blank";
 
-            var thumbnail = document.createElement('img');
-            thumbnail.src = t.data.thumbnail;
+            const thumbnail = document.createElement('img');
+            thumbnail.src = entry.data.thumbnail;
             figure.appendChild(thumbnail);
 
-            var title = document.createElement('figcaption');
-            title.innerHTML = t.data.title;
+            const title = document.createElement('figcaption');
+            title.innerHTML = entry.data.title;
             figure.appendChild(title);
 
-            container.appendChild(entry).appendChild(figure);
+            container.appendChild(entryEl).appendChild(figure);
+
         });
 
-    };
+    }
 
-    var handleOnLoad = function (res) {
-        entries = res.target.response.data.children;
+    sort (sortBy = this.sortBy) {
+        const container = $("#container");
+        const entries = Array.from(container.querySelectorAll(".entry"));
 
-        buildList(entries);
-        //sort('ups'); // Funktioniert irgendwie nicht
-    };
-
-    var getJSON = function(sub, cat, limit) {
-        var httpRequest = new XMLHttpRequest();
-        httpRequest.onload = handleOnLoad;
-        httpRequest.responseType = 'json';
-        httpRequest.open('GET', 'https://www.reddit.com/r/'+sub+'/'+cat+'.json', true);
-        httpRequest.send({ 'g': 'GLOBAL', limit: limit });
-    };
-
-    var init = function() {
-        var filter = document.querySelector('#filter');
-        filter.addEventListener('submit', function(e)  {
-            var formData = new FormData(filter),
-                subreddit = formData.get('subreddit'),
-                category = formData.get('category');
-                limit = formData.get('limit');
-
-            getJSON(subreddit, category, limit);
-            e.preventDefault();
+        entries.sort((a, b) => {
+            return (a.dataset[sortBy] - 0) < (b.dataset[sortBy] - 0) ? 1 : -1;
         });
 
-        var sort = document.querySelector('#sort');
-        sort.addEventListener('click', function(e)  {
-            sort(this.querySelector('input[name="sort"]:checked').value);
-        });
+        entries.forEach(entry => container.append(entry));
+    }
 
-        getJSON('memes', 'hot', '15');
-    };
+    toQueryString (obj) {
+        return Object.entries(obj).map(([k, v]) => `${encodeURI(k)}=${encodeURI(v)}`).join("&");
+    }
 
-    document.addEventListener('DOMContentLoaded', init());
+}
 
-})(window);
+document.addEventListener("DOMContentLoaded", () => new MemeViewer());
+
+/*
+
+const sort = (sortBy) => (entries) => entries.sort((a, b) => a.dataset[sortBy]-0 < b.dataset[sortBy] ? 1 : -1);
+const toQueryString = obj => Object.entries(obj).map(([k, v]) => `${encodeURI(k)}=${encodeURI(v)}`).join("&");
+
+const getJSON = (url) => fetch(url)
+    .then(res => res.json())
+    .then(json => json.data.children);
+
+const toElements = (entries) => entries.map(entry => {
+    if (entry.data.thumbnail === "" || entry.data.thumbnail == "self") return;
+    if (entry.data.over_18) return;
+    if (entry.data.stickied) return;
+
+    const entryEl = document.createElement('a');
+    entryEl.classList.add('entry');
+    entryEl.href = entry.data.url;
+    entryEl.target = "_blank";
+    entryEl.setAttribute('data-score', entry.data.score);
+    entryEl.setAttribute('data-ups', entry.data.ups);
+    entryEl.setAttribute('data-downs', entry.data.downs);
+    entryEl.setAttribute('data-created', entry.data.created);
+
+    const figure = document.createElement('figure');
+    figure.href = entry.data.url;
+    figure.target = "_blank";
+
+    const thumbnail = document.createElement('img');
+    thumbnail.src = entry.data.thumbnail;
+    figure.appendChild(thumbnail);
+
+    const title = document.createElement('figcaption');
+    title.innerHTML = entry.data.title;
+    figure.appendChild(title);
+
+    entryEl.appendChild(figure);
+
+    return entryEl;
+});
+
+const appendTo = (el) => (entries) => (el.innerHTML = "") || entries.forEach(entry => el.appendChild(entry));
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const load = (sub = "memes", cat = "hot", limit = 15) => getJSON(`https://www.reddit.com/r/${sub}/${cat}.json?${toQueryString({ g: "GLOBAL", limit })}`)
+        .then(toElements)
+        .then(sort(($("#sort input[name='sort']:checked") || { value: "score" }).value))
+        .then(appendTo($("#container")))
+        .catch(console.log);
+
+    const filter = $("#filter");
+    filter.addEventListener("submit", e => {
+        e.preventDefault();
+        const formData = new FormData(filter);
+        load(formData.get("subreddit"), formData.get("category"), formData.get("limit"));
+    });
+
+    $("#sort").addEventListener("click", e =>  {
+        if (e.target.value == undefined) return;
+        load();
+    });
+    
+    load();
+});
+
+*/

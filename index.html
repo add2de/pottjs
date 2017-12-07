@@ -55,6 +55,10 @@
                             <option value="controversial">Kontrovers</option>
                         </select>
                     </div>
+                    <div class="filter filter__config">
+                        <label><input id="allow_nsfw" name="allow_nsfw" type="checkbox"><span>Allow NSFW?</span></label>
+                        <label><input id="allow_sticky" name="allow_sticky" type="checkbox"><span>Allow Sticky?</span></label>
+                    </div>
                     <div class="filter filter__submit">
                         <input type="submit" value="Laden">
                     </div>
@@ -62,9 +66,10 @@
                 <fieldset id="sort">
                     <ul class="sort sort__elements">
                         <li>Sortieren nach: </li>
+                        <li><input type="radio" id="sortByScore" name="sort" value="score" ><label for="sortByScore">Score</label></li>
                         <li><input type="radio" id="sortByUps" name="sort" value="ups" ><label for="sortByUps">Upvotes</label></li>
                         <li><input type="radio" id="sortByDowns" name="sort" value="downs" ><label for="sortByDowns">Downvotes</label></li>
-                        <li><input type="radio" id="sortByTime" name="sort" value="age" ><label for="sortByTime">Age</label></li>
+                        <li><input type="radio" id="sortByTime" name="sort" value="created" ><label for="sortByTime">Age</label></li>
                     </ul>
                 </fieldset>
             </form>

@@ -154,6 +154,11 @@ input, label {
     display:block;
 }
 
+input[type="checkbox"] {
+    display: inline-block;
+    width: auto;
+}
+
 
 #container {
     display: flex;
