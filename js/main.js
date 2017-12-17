@@ -1,97 +1,88 @@
-(function (window, $) {
+class MemeViewer {
+	constructor() {
+		this.entries = []
 
-    var data = {},
-        filter,
-        entries = {};
+		let filter = document.querySelector('#filter');
+		filter.addEventListener('submit', (e) => {
+			e.preventDefault();
 
-    var sort = function (sortBy) {
-        container = document.querySelector('#container');
-        entries = container.querySelectorAll(".entry");
+			let formData = new FormData(filter),
+				subreddit = formData.get('subreddit'),
+				category = formData.get('category');
+			let limit = formData.get('limit');
 
-        entries.sort(function(a,b){
-            var contentA = parseInt( $(a).data(sortBy));
-            var contentB = parseInt( $(b).data(sortBy));
-            return (contentA < contentB) ? -1 : 1;
-        });
+			this.showNFSW = !!formData.get('nsfw')
+			this.showStickied = !!formData.get('stickied')
 
-        entries.forEach(function () {
-            container.append(this);
-        });
-    };
+			this.load(subreddit, category, limit);
+		});
 
-    var buildList = function (entries) {
-        var container = document.querySelector('#container');
-        var oldEntries = container.querySelectorAll('.entry');
+		let sort = document.querySelector('#sort');
+		sort.addEventListener('change', (e) => {
+			this.entries = this.sort(this.entries, document.querySelector('input[name="sort"]:checked').value);
+			this.updateDOM(this.entries)
+		});
 
-        oldEntries.forEach(function(entry) {
-            container.removeChild(entry);
-        });
+		this.load('memes', 'hot', '15');
+	}
 
-        entries.forEach(function (t) {
-            if(t.data.thumbnail == '' || t.data.thumbnail == 'self' ) return;
-            if(t.data.over_18) return;
-            if(t.data.stickied) return;
+	load(sub, cat, limit) {
+		fetch(`https://www.reddit.com/r/${sub}/${cat}.json?g=GLOBAL&limit=${limit}`)
+			.then(response => response.json()).then((json) => {
+			this.entries = json.data.children;
+			this.entries = this.sort(this.entries, 'ups');
+			this.updateDOM(this.entries);
+		})
+	}
 
-            var entry = document.createElement('a');
-            entry.classList.add('entry');
-            entry.href = t.data.url;
-            entry.target = "_blank";
-            entry.setAttribute('data-score', t.data.score);
-            entry.setAttribute('data-ups', t.data.ups);
-            entry.setAttribute('data-created', t.data.created);
+	updateDOM(entries) {
+		let container = document.querySelector('#container');
+		let oldEntries = container.querySelectorAll('.entry');
 
-            var figure = document.createElement('figure');
-            figure.href = t.data.url;
-            figure.target = "_blank";
+		oldEntries.forEach(function (entry) {
+			container.removeChild(entry);
+		});
 
-            var thumbnail = document.createElement('img');
-            thumbnail.src = t.data.thumbnail;
-            figure.appendChild(thumbnail);
+		entries
+			.filter(this.isEntryShown.bind(this))
+			.forEach(function (t) {
+				let entry = document.createElement('a');
+				entry.classList.add('entry');
+				entry.href = t.data.url;
+				entry.target = "_blank";
+				entry.setAttribute('data-score', t.data.score);
+				entry.setAttribute('data-ups', t.data.ups);
+				entry.setAttribute('data-created', t.data.created);
 
-            var title = document.createElement('figcaption');
-            title.innerHTML = t.data.title;
-            figure.appendChild(title);
+				let figure = document.createElement('figure');
+				figure.href = t.data.url;
+				figure.target = "_blank";
 
-            container.appendChild(entry).appendChild(figure);
-        });
+				let thumbnail = document.createElement('img');
+				thumbnail.src = t.data.thumbnail;
+				figure.appendChild(thumbnail);
 
-    };
+				let title = document.createElement('figcaption');
+				title.innerHTML = t.data.title;
+				figure.appendChild(title);
 
-    var handleOnLoad = function (res) {
-        entries = res.target.response.data.children;
+				container.appendChild(entry).appendChild(figure);
+			})
+	}
 
-        buildList(entries);
-        //sort('ups'); // Funktioniert irgendwie nicht
-    };
+	sort(entries, sortBy) {
+		return entries.slice().sort((a, b) => {
+			const contentA = a.data[sortBy]
+			const contentB = b.data[sortBy]
+			return contentB - contentA
+		})
+	};
 
-    var getJSON = function(sub, cat, limit) {
-        var httpRequest = new XMLHttpRequest();
-        httpRequest.onload = handleOnLoad;
-        httpRequest.responseType = 'json';
-        httpRequest.open('GET', 'https://www.reddit.com/r/'+sub+'/'+cat+'.json', true);
-        httpRequest.send({ 'g': 'GLOBAL', limit: limit });
-    };
+	isEntryShown(entry) {
+		let hasThumbnail = entry.data.thumbnail !== '' && entry.data.thumbnail !== 'self'
+		let isNFSW = entry.data.over_18
+		let isStickied = entry.data.stickied
 
-    var init = function() {
-        var filter = document.querySelector('#filter');
-        filter.addEventListener('submit', function(e)  {
-            var formData = new FormData(filter),
-                subreddit = formData.get('subreddit'),
-                category = formData.get('category');
-                limit = formData.get('limit');
-
-            getJSON(subreddit, category, limit);
-            e.preventDefault();
-        });
-
-        var sort = document.querySelector('#sort');
-        sort.addEventListener('click', function(e)  {
-            sort(this.querySelector('input[name="sort"]:checked').value);
-        });
-
-        getJSON('memes', 'hot', '15');
-    };
-
-    document.addEventListener('DOMContentLoaded', init());
-
-})(window);
+		return hasThumbnail && (this.showNFSW ? true : !isNFSW) && (this.showStickied ? true : !isStickied)
+	}
+}

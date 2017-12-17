@@ -1,75 +1,92 @@
 <!doctype html>
 <html class="no-js" lang="de">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>reddit images</title>
-        <meta name="description" content="meme viewer">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<title>reddit images</title>
+	<meta name="description" content="meme viewer">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="icon" href="//add2.de/files/add2/icons/favicons/add2_favicon.ico" type="image/x-icon" />
+	<link rel="icon" href="//add2.de/files/add2/icons/favicons/add2_favicon.ico" type="image/x-icon" />
 
-        <link href="https://fonts.googleapis.com/css?family=Encode+Sans+Condensed" rel="stylesheet">
-        <link rel="stylesheet" href="css/normalize.css">
-        <link rel="stylesheet" href="css/main.css">
+	<link href="https://fonts.googleapis.com/css?family=Encode+Sans+Condensed" rel="stylesheet">
+	<link rel="stylesheet" href="css/normalize.css">
+	<link rel="stylesheet" href="css/main.css">
 
-        <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>-->
-        <script src="js/main.js"></script>
-    </head>
-    <body>
-        <div id="stage">
-            <header>
-                <h1>meme viewer</h1>
-            </header>
-            <form id="filter">
-                <fieldset class="filter-fieldset">
-                    <div class="filter filter__subreddit">
-                        <label for="subreddit">Subreddit</label>
-                        <input type="text" id="subreddit" name="subreddit" value="meme" list="subreddits" />
+	<!--<script src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>-->
+	<script src="js/main.js"></script>
+</head>
+<body>
+<div id="stage">
+	<header>
+		<h1>meme viewer</h1>
+	</header>
+	<form id="filter">
+		<fieldset class="filter-fieldset">
+			<div class="filter filter__subreddit">
+				<label for="subreddit">Subreddit</label>
+				<input type="text" id="subreddit" name="subreddit" value="meme" list="subreddits" />
 
-                        <datalist id="subreddits">
-                            <option value="funny">
-                            <option value="memes">
-                            <option value="AdviceAnimals">
-                            <option value="gifs">
-                            <option value="cats">
-                            <option value="aww">
-                            <option value="instant_regret">
-                        </datalist>
-                    </div>
-                    <div class="filter filter__limit">
-                        <label for="limit">Limit</label>
-                        <select id="limit" name="limit">
-                            <option value="15">15</option>
-                            <option value="30">30</option>
-                            <option value="45">45</option>
-                            <option value="60">60</option>
-                        </select>
-                    </div>
-                    <div class="filter filter__category">
-                        <label for="category">Kategorie</label>
-                        <select id="category" name="category">
-                            <option value="hot">Beliebt</option>
-                            <option value="new">Neu</option>
-                            <option value="top">Top</option>
-                            <option value="controversial">Kontrovers</option>
-                        </select>
-                    </div>
-                    <div class="filter filter__submit">
-                        <input type="submit" value="Laden">
-                    </div>
-                </fieldset>
-                <fieldset id="sort">
-                    <ul class="sort sort__elements">
-                        <li>Sortieren nach: </li>
-                        <li><input type="radio" id="sortByUps" name="sort" value="ups" ><label for="sortByUps">Upvotes</label></li>
-                        <li><input type="radio" id="sortByDowns" name="sort" value="downs" ><label for="sortByDowns">Downvotes</label></li>
-                        <li><input type="radio" id="sortByTime" name="sort" value="age" ><label for="sortByTime">Age</label></li>
-                    </ul>
-                </fieldset>
-            </form>
+				<datalist id="subreddits">
+					<option value="funny">
+					<option value="memes">
+					<option value="AdviceAnimals">
+					<option value="gifs">
+					<option value="cats">
+					<option value="aww">
+					<option value="instant_regret">
+				</datalist>
+			</div>
+			<div class="filter filter__limit">
+				<label for="limit">Limit</label>
+				<select id="limit" name="limit">
+					<option value="15">15</option>
+					<option value="30">30</option>
+					<option value="45">45</option>
+					<option value="60">60</option>
+				</select>
+			</div>
+			<div class="filter filter__category">
+				<label for="category">Kategorie</label>
+				<select id="category" name="category">
+					<option value="hot">Beliebt</option>
+					<option value="new">Neu</option>
+					<option value="top">Top</option>
+					<option value="controversial">Kontrovers</option>
+				</select>
+			</div>
+			<div class="filter filter__options">
+				<div class="filter__option">
+					<label for="nsfw">Show NSFW Memes</label>
+					<input type="checkbox" id="nsfw" name="nsfw" value="checked">
+				</div>
 
-            <div id="container"></div>
-        </div>
-    </body>
+				<div class="filter__option">
+					<label for="stickied">Show Sticky Memes</label>
+					<input type="checkbox" id="stickied" name="stickied" value="checked">
+				</div>
+			</div>
+			<div class="filter filter__submit">
+				<input type="submit" value="Laden">
+			</div>
+		</fieldset>
+		<fieldset id="sort">
+			<ul class="sort sort__elements">
+				<li>Sortieren nach:</li>
+				<li><input type="radio" id="sortByUps" name="sort" value="ups"><label for="sortByUps">Upvotes</label>
+				</li>
+				<li><input type="radio" id="sortByDowns" name="sort" value="downs"><label
+						for="sortByDowns">Downvotes</label></li>
+				<li><input type="radio" id="sortByTime" name="sort" value="created_utc"><label
+						for="sortByTime">Age</label></li>
+			</ul>
+		</fieldset>
+	</form>
+
+	<div id="container"></div>
+</div>
+<script>
+	new MemeViewer()
+</script>
+</body>
 </html>

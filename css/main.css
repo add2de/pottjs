@@ -112,10 +112,27 @@ fieldset {
 .filter__category {
     flex-grow: 1;
     width: 10%;
+    min-width: 100px;
 }
 
 .filter__submit {
     width: 5%;
+    min-width: 100px;
+}
+
+.filter__options {
+    flex-grow: 1;
+
+}
+.filter__option {
+    display: flex;
+    width: 20%;
+    min-width: 150px;
+    justify-content: space-between;
+    align-items: center;
+}
+.filter__option input {
+    width: 25%;
 }
 
 #sort ul {
